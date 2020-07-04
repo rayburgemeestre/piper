@@ -5,12 +5,12 @@
  */
 #pragma once
 
-#include <vector>
-#include <map>
-#include <set>
 #include <condition_variable>
-#include <mutex>
+#include <map>
 #include <memory>
+#include <mutex>
+#include <set>
+#include <vector>
 
 #include "message_type.hpp"
 
@@ -32,7 +32,7 @@ public:
   std::vector<node *> consumer_ptrs;
   std::vector<node *> provider_ptrs;
 
-  explicit storage_container(const std::string& name, pipeline_system &sys, int max_items);
+  explicit storage_container(const std::string &name, pipeline_system &sys, int max_items);
 
   void set_consumer(node *node_ptr, int id);
   void set_provider(node *node_ptr);

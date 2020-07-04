@@ -6,22 +6,21 @@
 
 #pragma once
 
-#include <string>
-#include <optional>
-#include <thread>
 #include <condition_variable>
-#include <mutex>
-#include <memory>
 #include <functional>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <string>
+#include <thread>
 
-#include "transform_type.hpp"
 #include "message_type.hpp"
 #include "storage_container.h"
+#include "transform_type.hpp"
 
 class pipeline_system;
 
-class node
-{
+class node {
 private:
   pipeline_system &system;
   int64_t id_ = 0;
@@ -41,7 +40,7 @@ private:
 
 public:
   explicit node(pipeline_system &sys);
-  explicit node(const std::string& name, pipeline_system &sys);
+  explicit node(const std::string &name, pipeline_system &sys);
 
   std::string name();
   bool active();

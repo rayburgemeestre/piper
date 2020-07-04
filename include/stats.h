@@ -6,12 +6,11 @@
 
 #pragma once
 
+#include <map>
 #include <mutex>
 #include <string>
-#include <map>
 
-class stats
-{
+class stats {
 private:
   std::mutex stats_mut;
   struct node_stats {
@@ -25,7 +24,6 @@ private:
   std::map<std::string, node_stats> stats_;
 
 public:
-
   void set_type(const std::string& name, bool is_storage);
   void set_sleep_until_not_full(const std::string& name, bool val);
   void set_sleep_until_not_empty(const std::string& name, bool val);

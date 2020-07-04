@@ -6,22 +6,22 @@
 
 #pragma once
 
-#include <vector>
 #include <condition_variable>
-#include <mutex>
-#include <map>
-#include <thread>
-#include <string>
 #include <functional>
+#include <map>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
 
-#include "stats.h"
-#include "transform_type.hpp"
-#include "storage_container.h"
 #include "node.h"
+#include "stats.h"
+#include "storage_container.h"
+#include "transform_type.hpp"
 
 class pipeline_system {
 public:
-  std::vector<std::shared_ptr<storage_container> > containers;
+  std::vector<std::shared_ptr<storage_container>> containers;
   std::vector<node *> nodes;
   std::condition_variable cv;
   std::mutex mut;
@@ -37,25 +37,32 @@ public:
   ~pipeline_system();
 
   void run();
-  void link(std::shared_ptr<storage_container> );
+  void link(std::shared_ptr<storage_container>);
   void link(node *);
   void sleep();
   void start();
   bool active();
 
-  std::shared_ptr<storage_container> create_storage(const std::string& name, size_t max_items);
+  std::shared_ptr<storage_container> create_storage(const std::string &name, size_t max_items);
 
   template <typename F = std::function<int *()>>
   void spawn_producer(std::string name, F fun, std::shared_ptr<storage_container> output);
   template <typename F = std::function<int(int i)>>
-  void spawn_transformer(std::string name, F fun, std::shared_ptr<storage_container> input, std::shared_ptr<storage_container> output, std::optional<transform_type> tt = std::nullopt);
+  void spawn_transformer(std::string name,
+                         F fun,
+                         std::shared_ptr<storage_container> input,
+                         std::shared_ptr<storage_container> output,
+                         std::optional<transform_type> tt = std::nullopt);
   template <typename F = std::function<void(int i)>>
   void spawn_consumer(std::string name, F fun, std::shared_ptr<storage_container> input);
 
   template <typename F = std::function<int *()>>
   void spawn_producer(F fun, std::shared_ptr<storage_container> output);
   template <typename F = std::function<int(int i)>>
-  void spawn_transformer(F fun, std::shared_ptr<storage_container> input, std::shared_ptr<storage_container> output, std::optional<transform_type> tt = std::nullopt);
+  void spawn_transformer(F fun,
+                         std::shared_ptr<storage_container> input,
+                         std::shared_ptr<storage_container> output,
+                         std::optional<transform_type> tt = std::nullopt);
   template <typename F = std::function<void(int i)>>
   void spawn_consumer(F fun, std::shared_ptr<storage_container> input);
 };
@@ -68,7 +75,10 @@ void pipeline_system::spawn_producer(F fun, std::shared_ptr<storage_container> o
 }
 
 template <typename F>
-void pipeline_system::spawn_transformer(F fun, std::shared_ptr<storage_container> input, std::shared_ptr<storage_container> output, std::optional<transform_type> tt) {
+void pipeline_system::spawn_transformer(F fun,
+                                        std::shared_ptr<storage_container> input,
+                                        std::shared_ptr<storage_container> output,
+                                        std::optional<transform_type> tt) {
   spawn_transformer("", fun, input, output, tt);
 }
 
@@ -86,7 +96,11 @@ void pipeline_system::spawn_producer(std::string name, F fun, std::shared_ptr<st
 }
 
 template <typename F>
-void pipeline_system::spawn_transformer(std::string name, F fun, std::shared_ptr<storage_container> input, std::shared_ptr<storage_container> output, std::optional<transform_type> tt) {
+void pipeline_system::spawn_transformer(std::string name,
+                                        F fun,
+                                        std::shared_ptr<storage_container> input,
+                                        std::shared_ptr<storage_container> output,
+                                        std::optional<transform_type> tt) {
   auto n = std::make_shared<node>(name, *this);
   static int uid = 1;
   if (tt && *tt == transform_type::same_pool) {
@@ -120,13 +134,11 @@ std::function<std::shared_ptr<message_type>()> producer_function(std::function<s
 
 template <typename IN, typename OUT>
 std::function<std::shared_ptr<message_type>(std::shared_ptr<message_type>)> transform_function(
-  std::function<std::shared_ptr<OUT>(std::shared_ptr<IN>)> &&func) {
-  std::function<std::shared_ptr<message_type>(std::shared_ptr<message_type>)> test(
-    [=](std::shared_ptr<message_type> item) -> std::shared_ptr<message_type> {
-      auto msg = std::dynamic_pointer_cast<IN>(item);
-      return std::dynamic_pointer_cast<message_type>(func(msg));
-    });
-  return test;
+    std::function<std::shared_ptr<OUT>(std::shared_ptr<IN>)> &&func) {
+  return [=](std::shared_ptr<message_type> item) -> std::shared_ptr<message_type> {
+    auto msg = std::dynamic_pointer_cast<IN>(item);
+    return std::dynamic_pointer_cast<message_type>(func(msg));
+  };
 }
 
 template <typename IN>

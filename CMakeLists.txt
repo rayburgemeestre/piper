@@ -19,7 +19,7 @@ endif()
 
 add_definitions(${COMPILE_FLAGS})
 
-file(GLOB_RECURSE SOURCES "main.cpp" "src/**")
+file(GLOB_RECURSE SOURCES "main.cpp" "src/**" "include/**")
 
 include_directories("include")
 

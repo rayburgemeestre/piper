@@ -6,8 +6,4 @@
 
 #pragma once
 
-enum class line_type {
-  normal,
-  extra_output,
-  extra_input
-};
+enum class line_type { normal, extra_output, extra_input };
