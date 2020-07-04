@@ -1,0 +1,7 @@
+.idea/
+CMakeFiles/
+build/
+cmake-build-debug/
+cmake_install.cmake
+example
+piper_example.cbp
