@@ -21,7 +21,7 @@ Then add path in your `CMakeLists.txt`
 
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libs/piper/")
 
-... TODO ... -- link against library or add libs/piper/src dir to your project
+... TODO ...
 
 Use in source code:
 
