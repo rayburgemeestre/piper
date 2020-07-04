@@ -8,108 +8,113 @@
 #include "pipeline_system.h"
 #include "storage_container.h"
 
-// TODO: put in pipeline_system?, generate_name() ?
 static int global_counter = 1;
 
 node::node(pipeline_system &sys) : node("", sys) {}
 
-node::node(std::string name, pipeline_system &sys) : system(sys), runner(std::bind(&node::run, this)), name(name) {
+node::node(const std::string &name, pipeline_system &sys)
+    : system(sys), name_(name), runner(std::bind(&node::run, this)) {
   sys.link(this);
-  sys.set_stats(name, false);
+  sys.stats_.set_type(name, false);
+}
+
+std::string node::name() {
+  return name_;
+}
+
+bool node::active() {
+  return active_;
+}
+
+std::optional<transform_type> node::get_transform_type() {
+  return transform_type_;
+}
+
+void node::set_id(int64_t id) {
+  this->id_ = id;
 }
 
 void node::init() {
-  if (name.empty()) {
+  if (name_.empty()) {
     if (!input_storage && output_storage) {
-      name = "producer " + std::to_string(global_counter);
+      name_ = "producer " + std::to_string(global_counter);
     } else if (input_storage && output_storage) {
-      name = "transformer " + std::to_string(global_counter);
+      name_ = "transformer " + std::to_string(global_counter);
     } else if (input_storage && !output_storage) {
-      name = "consumer " + std::to_string(global_counter);
+      name_ = "consumer " + std::to_string(global_counter);
     }
     global_counter++;
   }
 }
 
-void node::set_input_storage(storage_container *ptr) {
+void node::set_input_storage(std::shared_ptr<storage_container> ptr) {
   input_storage = ptr;
-  input_storage->set_consumer(this, id);
+  input_storage->set_consumer(this, id_);
 }
 
-// there can only be one
-// TODO: different approach, we need more outputs actually, so we can just link up different consumers to different
-// outputs. This way we don't accidentally push too much stuff , and keeps things simple.
-void node::set_output_storage(storage_container *ptr) {
+void node::set_output_storage(std::shared_ptr<storage_container> ptr) {
   output_storage = ptr;
   output_storage->set_provider(this);
 }
 
-void node::stop() {
-  system.set_stats_active(name, false);
-  active = false;
-  if (input_storage) input_storage->stop();
-  if (output_storage) output_storage->stop();
+void node::set_transform_type(transform_type tt) {
+  transform_type_ = tt;
 }
 
 void node::run() {
   system.sleep();
-  while (system.active() && active) {
-    // only producer
+  while (system.active() && active_) {
+    // producer
     if (!input_storage && output_storage) {
-      while (!output_storage->is_full() && active) {
+      while (!output_storage->is_full() && active_) {
         std::shared_ptr<message_type> ret = produce();
-        if (!ret) {
-          system.set_stats_active(name, false);
-          active = false;
-          output_storage->check_terminate();
+        if (ret) {
+          output_storage->push(std::move(ret));
+        } else {
+          deactivate();
           break;
         }
-        output_storage->add(std::move(ret));
       }
-      if (active) {
-        system.set_stats_sleep_until_not_full(name, true);
-        output_storage->sleep_until_not_full();
-        system.set_stats_sleep_until_not_full(name, false);
+      if (active_) {
+        sleep_until_not_full();
       }
     }
     // transformer
     else if (input_storage && output_storage) {
-      system.set_stats_sleep_until_not_empty(name, true);
-      input_storage->sleep_until_items_available(id);
-      system.set_stats_sleep_until_not_empty(name, false);
-      while (input_storage->has_items(id)) {
-        auto ret = input_storage->get(id);
-        if (ret) {  // if we are sharing the ID with multiple threads, it can happen
-          // that we will end up with checking if there is something, but while get()ing it
-          // it was already gone, and nullptr will be returned.
-          auto transformed = std::move(transform(std::move(ret)));
-          system.set_stats_sleep_until_not_full(name, true);
-          output_storage->sleep_until_not_full();
-          system.set_stats_sleep_until_not_full(name, false);
-          output_storage->add(std::move(transformed));
+      sleep_until_items_available();
+      while (input_storage->has_items(id_)) {
+        if (auto ret = input_storage->pop(id_)) {
+          auto transformed = transform(std::move(ret));
+          sleep_until_not_full();
+          output_storage->push(std::move(transformed));
         }
       }
       if (!input_storage->active) {
-        system.set_stats_active(name, false);
-        active = false;
-        output_storage->check_terminate();
+        deactivate();
       }
     }
-    // only consumer
+    // consumer
     else if (input_storage && !output_storage) {
-      system.set_stats_sleep_until_not_empty(name, true);
-      input_storage->sleep_until_items_available(id);
-      system.set_stats_sleep_until_not_empty(name, false);
-      while (input_storage->has_items(id)) {
-        auto ret2 = input_storage->get(id);
+      sleep_until_items_available();
+      while (input_storage->has_items(id_)) {
+        auto ret2 = input_storage->pop(id_);
         consume(std::move(ret2));
       }
       if (!input_storage->active) {
-        system.set_stats_active(name, false);
-        active = false;
+        deactivate();
       }
     }
   }
+}
+
+void node::set_produce_function(produce_fun_t fun) {
+  produce_fun = std::move(fun);
+}
+void node::set_transform_function(transform_fun_t fun) {
+  transform_fun = std::move(fun);
+}
+void node::set_consume_function(consume_fun_t fun) {
+  consume_fun = std::move(fun);
 }
 
 std::shared_ptr<message_type> node::produce() {
@@ -122,4 +127,26 @@ std::shared_ptr<message_type> node::transform(std::shared_ptr<message_type> item
 
 void node::consume(std::shared_ptr<message_type> item) {
   return consume_fun(std::move(item));
+}
+
+void node::sleep_until_items_available() {
+  system.stats_.set_sleep_until_not_empty(name_, true);
+  input_storage->sleep_until_items_available(id_);
+  system.stats_.set_sleep_until_not_empty(name_, false);
+}
+
+void node::sleep_until_not_full() {
+  system.stats_.set_sleep_until_not_full(name_, true);
+  output_storage->sleep_until_not_full();
+  system.stats_.set_sleep_until_not_full(name_, false);
+}
+
+void node::deactivate() {
+  system.stats_.set_active(name_, false);
+  active_ = false;
+  if (output_storage) output_storage->check_terminate();
+}
+
+void node::join() {
+  runner.join();
 }

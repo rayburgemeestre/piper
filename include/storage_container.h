@@ -6,6 +6,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include <set>
 #include <condition_variable>
 #include <mutex>
@@ -20,30 +21,29 @@ class storage_container {
 public:
   std::condition_variable cv;
   std::vector<std::pair<std::set<int>, std::shared_ptr<message_type>>> items;
-  bool items_has_items = false;
-  bool items_is_full = false;
+  std::map<int, size_t> consumer_items_available;
   std::mutex items_mut;
-  int max_items = 10;
+  std::string name;
   pipeline_system &system;
+  int max_items = 10;
   bool active = true;
-  std::set<int> consumers;
+  bool terminating = false;
+  std::set<int> consumer_ids;
   std::vector<node *> consumer_ptrs;
   std::vector<node *> provider_ptrs;
-  std::mutex sleep_mut;
-  std::string name;
+
+  explicit storage_container(const std::string& name, pipeline_system &sys, int max_items);
 
   void set_consumer(node *node_ptr, int id);
   void set_provider(node *node_ptr);
-  explicit storage_container(std::string name, pipeline_system &sys, int max_items);
   void sleep_until_not_full();
   void sleep_until_items_available(int id);
-  void stop();
-  void add(std::shared_ptr<message_type> value);
+  void push(std::shared_ptr<message_type> value);
   bool is_full();
   bool is_full_unprotected();
-  size_t num_items(int id);
   bool has_items(int id);
-  bool has_items_no_lock(int id);
-  std::shared_ptr<message_type> get(int id);
+  bool has_items_unprotected(int id);
+  std::shared_ptr<message_type> pop(int id);
   void check_terminate();
+  void deactivate();
 };

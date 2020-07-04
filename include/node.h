@@ -11,47 +11,59 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <memory>
 #include <functional>
 
 #include "transform_type.hpp"
 #include "message_type.hpp"
+#include "storage_container.h"
 
 class pipeline_system;
-class storage_container;
 
-class node {
-public:
-  std::condition_variable cv;
-  std::mutex mut;
-
-  storage_container *input_storage = nullptr;
-  storage_container *output_storage = nullptr;
+class node
+{
+private:
   pipeline_system &system;
+  int64_t id_ = 0;
+  std::string name_;
   std::thread runner;
+  bool active_ = true;
+  std::shared_ptr<storage_container> input_storage;
+  std::shared_ptr<storage_container> output_storage;
+  std::optional<transform_type> transform_type_;
+  using message_t = std::shared_ptr<message_type>;
+  using produce_fun_t = std::function<message_t()>;
+  using transform_fun_t = std::function<message_t(message_t)>;
+  using consume_fun_t = std::function<void(message_t)>;
+  produce_fun_t produce_fun = []() -> message_t { return nullptr; };
+  transform_fun_t transform_fun = [](message_t a) -> message_t { return a; };
+  consume_fun_t consume_fun = [](const message_t &) {};
 
-  std::string name;
-  bool active = true;
-  int id = 0;
-  std::optional<transform_type> tt;
-
-  std::function<std::shared_ptr<message_type>()> produce_fun = []() -> std::shared_ptr<message_type> {
-    return nullptr;
-  };
-  std::function<std::shared_ptr<message_type>(std::shared_ptr<message_type>)> transform_fun =
-    [](std::shared_ptr<message_type> a) -> std::shared_ptr<message_type> {
-    return a;
-  };
-
-  std::function<void(std::shared_ptr<message_type>)> consume_fun = [](std::shared_ptr<message_type>) {};
-
+public:
   explicit node(pipeline_system &sys);
-  explicit node(std::string name, pipeline_system &sys);
+  explicit node(const std::string& name, pipeline_system &sys);
+
+  std::string name();
+  bool active();
+  std::optional<transform_type> get_transform_type();
+
+  void set_id(int64_t id);
   void init();
-  void set_input_storage(storage_container *ptr);
-  void set_output_storage(storage_container *ptr);
-  void stop();
+  void set_input_storage(std::shared_ptr<storage_container> ptr);
+  void set_output_storage(std::shared_ptr<storage_container> ptr);
+  void set_transform_type(transform_type tt);
   void run();
+
+  void set_produce_function(produce_fun_t fun);
+  void set_transform_function(transform_fun_t fun);
+  void set_consume_function(consume_fun_t fun);
+
   std::shared_ptr<message_type> produce();
   std::shared_ptr<message_type> transform(std::shared_ptr<message_type> item);
   void consume(std::shared_ptr<message_type> item);
+
+  void sleep_until_items_available();
+  void sleep_until_not_full();
+  void deactivate();
+  void join();
 };

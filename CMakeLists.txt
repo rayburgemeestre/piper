@@ -12,7 +12,7 @@ set(PKG_CONFIG_EXECUTABLE "/usr/bin/pkg-config")
 find_package(Threads)
 
 if (NOT DEBUG)
-    set (COMPILE_FLAGS "-O3 -Wall -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3 -Wl,--strip-all -flto -stdlib=libstdc++")
+    set (COMPILE_FLAGS "-O3 -Wall -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3 -flto -stdlib=libstdc++")
 else()
     set (COMPILE_FLAGS "-O0 -g -fno-inline -Wall  -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3")
 endif()

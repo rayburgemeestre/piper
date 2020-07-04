@@ -5,6 +5,8 @@
  */
 #pragma once
 
+#include <memory>
+
 static std::mutex mut__;
 
 class a {

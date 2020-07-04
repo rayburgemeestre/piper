@@ -7,5 +7,5 @@
 #pragma once
 
 struct message_type {
-  virtual ~message_type() {};
+  virtual ~message_type() = default;
 };

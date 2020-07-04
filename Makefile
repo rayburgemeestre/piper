@@ -3,9 +3,9 @@ SHELL:=/bin/bash
 fast-build:
 	mkdir -p build
 	pushd build && \
-	echo CXX=$(which c++) cmake .. && \
-	echo make -j $$(nproc) example && \
-	echo strip --strip-debug example
+	CXX=$(which c++) cmake .. && \
+	make -j $$(nproc) example && \
+	strip --strip-debug example
 
 debug:
 	mkdir -p build
