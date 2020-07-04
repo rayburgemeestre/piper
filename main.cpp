@@ -7,55 +7,51 @@
 #include "piper.h"
 
 #include <iostream>
+#include <random>
 
-struct job : public message_type {
-  int number = 0;
+struct random_xy : public message_type {
+  double x;
+  double y;
+  random_xy(double x, double y) : x(x), y(y) {}
 };
 
-struct final_job : public message_type {
-  std::string result;
-  final_job(std::string s) : result(std::move(s)) {}
+struct in_circle : public message_type {
+  bool value;
+  in_circle(bool value) : value(value) {}
 };
 
 int main() {
-  auto generate_numbers = producer_function<job>([]() -> std::shared_ptr<job> {
-    static int counter = 1, max = 10000;
-    if (counter <= max) {
-      auto the_job = std::make_shared<job>();
-      the_job->number = counter++;
-      return the_job;
-    }
-    return nullptr;
-  });
-  auto double_number = transform_function<job, job>([](std::shared_ptr<job> the_job) -> std::shared_ptr<job> {
-    the_job->number *= 2;
-    return the_job;
-  });
-  auto square_number =
-      transform_function<job, final_job>([](std::shared_ptr<job> the_job) -> std::shared_ptr<final_job> {
-        the_job->number *= the_job->number;
-        // for demo purposes create a new type of job at some point, containing a summary string
-        return std::make_shared<final_job>("Final result is: " + std::to_string(the_job->number));
-      });
-  auto print_number = consume_function<final_job>([](auto job) { a(std::cout) << job->result << std::endl; });
-
   pipeline_system system;
 
-  auto jobs = system.create_storage("jobs", 5);
-  auto jobs_processed = system.create_storage("jobs_processed", 5);
-  auto jobs_collected = system.create_storage("jobs_collected", 5);
+  auto points = system.create_storage("points", 5);
+  auto results = system.create_storage("results", 5);
 
-  // produce 10.000 jobs, containing just a number, and store them in "jobs"
-  system.spawn_producer(generate_numbers, jobs);
-  // transform jobs from "jobs" into "jobs_processed", multiplying the number by two
-  system.spawn_transformer(double_number, jobs, jobs_processed);
-  // transform jobs from "jobs_processed" with three workers in parallel (sharing same pool), store in "jobs_collected",
-  // squaring the numbers
-  system.spawn_transformer(square_number, jobs_processed, jobs_collected, transform_type::same_pool);
-  system.spawn_transformer(square_number, jobs_processed, jobs_collected, transform_type::same_pool);
-  system.spawn_transformer(square_number, jobs_processed, jobs_collected, transform_type::same_pool);
-  // consume the jobs from "jobs_collected" (prints them)
-  system.spawn_consumer(print_number, jobs_collected);
+  // produce endless stream of random X,Y coordinates.
+  system.spawn_producer(producer_function<random_xy>([&]() -> auto {
+                          static std::mt19937 gen;
+                          auto x = (gen() / double(gen.max()));
+                          auto y = (gen() / double(gen.max()));
+                          return std::make_shared<random_xy>(x, y);
+                        }),
+                        points);
+
+  // check if these points are within a circle
+  system.spawn_transformer(transform_function<random_xy, in_circle>([](auto job) -> auto {
+                             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                             auto dist = sqrt(pow(job->x - 0.5, 2) + pow(job->y - 0.5, 2));
+                             return std::make_shared<in_circle>(dist <= 0.5);
+                           }),
+                           points,
+                           results);
+
+  // estimate pi based on results
+  system.spawn_consumer(consume_function<in_circle>([&](auto job) {
+                          static size_t nom = 0, denom = 0;
+                          if (job->value) nom++;
+                          denom++;
+                          a(std::cout) << "Estimated pi: " << 4 * (nom / (double)denom) << std::endl;
+                        }),
+                        results);
 
   system.start();
 }

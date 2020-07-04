@@ -61,7 +61,7 @@ void pipeline_system::run() {
     std::unique_lock l(mut_timeout);
     cv_timeout.wait_for(l, std::chrono::milliseconds(1000), [&]() { return !is_active; });
     if (is_active) {
-      stats_.display();
+      // stats_.display();
     }
   }
 }

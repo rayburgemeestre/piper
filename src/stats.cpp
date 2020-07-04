@@ -111,5 +111,5 @@ void stats::display() {
     a(std::cout) << "" << std::endl;
   }
   a(std::cout) << "---  end  ---" << std::endl;
-  std::this_thread::sleep_for(std::chrono::hours(1));
+  // std::this_thread::sleep_for(std::chrono::hours(1));
 }

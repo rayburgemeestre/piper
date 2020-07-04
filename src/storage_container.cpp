@@ -49,9 +49,9 @@ void storage_container::push(std::shared_ptr<message_type> value) {
     std::unique_lock<std::mutex> scoped_lock(items_mut);
     items.emplace_back(std::make_pair(consumer_ids, std::move(value)));
     system.stats_.set_size(name, items.size());
-    for (const auto &consumer : consumer_ids) {
-      consumer_items_available[consumer]++;
-    }
+    //    for (const auto &consumer : consumer_ids) {
+    //      consumer_items_available[consumer]++;
+    //    }
   }
   cv.notify_all();
 }
@@ -87,7 +87,7 @@ std::shared_ptr<message_type> storage_container::pop(int id) {
   for (auto &pair : items) {
     if (pair.first.find(id) != pair.first.end()) {
       pair.first.erase(id);
-      consumer_items_available[id]--;
+      //      consumer_items_available[id]--;
       if (!pair.first.empty()) {
         ret = pair.second;
       } else {
