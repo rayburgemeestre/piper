@@ -99,16 +99,17 @@ int main() {
 ## Building
 
 ```bash
-make         # build all
-make debug   # debug build all
-make format  # format source code with clang-format
+make              # build all
+make debug        # debug build all
+make format       # format source code with clang-format
 ```
 
 ## Running
 
 ```bash
-./build/example
-./build/example2
+./build/example   # Estimate PI
+./build/example2  # multiple workers
+./build/example3  # CLI visualization
 ```
 
 ## Usage in projects
