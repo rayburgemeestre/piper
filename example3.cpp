@@ -9,7 +9,7 @@
 struct simple_msg : public message_type {};
 
 int main() {
-  pipeline_system system(true);
+  pipeline_system system(true); /* visualization is enabled in the constructor */
 
   auto jobs = system.create_queue("jobs", 10);
   auto processed = system.create_queue("processed", 10);

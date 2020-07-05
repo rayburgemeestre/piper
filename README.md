@@ -112,6 +112,53 @@ make format       # format source code with clang-format
 ./build/example3  # CLI visualization
 ```
 
+## CLI visualization (from `example3.cpp`)
+
+```
+      input                        storage                      output       
+                                                                             
++-----------------+          /-----------------\    ?     +-----------------+
+|    producer     |--------->|      jobs       |--------->|   transformer   |
++-----------------+          \-----------------/          +-----------------+
+    [sleeping]       100 FPS        Q:10         100 FPS      [sleeping]     
+                                                                             
++-----------------+          /-----------------\    OR    +-----------------+
+|   transformer   |--------->|    processed    |--------->|    worker 1     |
++-----------------+          \-----------------/          +-----------------+
+    [sleeping]       100 FPS        Q:10         38 FPS       [sleeping]     
+                                      |                                      
+                                      |             OR    +-----------------+
+                                      |------------------>|    worker 2     |
+                                      |                   +-----------------+
+                                      |      30 FPS           [sleeping]     
+                                      |                                      
+                                      |             OR    +-----------------+
+                                      |------------------>|    worker 3     |
+                                      |                   +-----------------+
+                                      |      32 FPS           [sleeping]     
+                                                                             
++-----------------+          /-----------------\    ?     +-----------------+
+|    worker 1     |--------->|    collected    |--------->|     printer     |
++-----------------+          \-----------------/          +-----------------+
+    [sleeping]       38 FPS         Q:10         99 FPS                      
+                                      ^                                      
++-----------------+                   |                                      
+|    worker 2     |-------------------+                                      
++-----------------+                   |                                      
+    [sleeping]           30 FPS       |                                      
+                                      ^                                      
++-----------------+                   |                                      
+|    worker 3     |-------------------+                                      
++-----------------+                   |                                      
+    [sleeping]           32 FPS       |                                      
+```
+
+The printer consumer is deliberately made slow and causes all queues to become full in
+this example. This will result in all components sleeping until they can deliver something
+new for their output storage.
+
+The visualization also shows the workers are dividing the available work.
+
 ## Usage in projects
 
 First add as submodule:
