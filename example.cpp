@@ -23,8 +23,8 @@ struct in_circle : public message_type {
 int main() {
   pipeline_system system;
 
-  auto points = system.create_storage(5);
-  auto results = system.create_storage(5);
+  auto points = system.create_queue(5);
+  auto results = system.create_queue(5);
 
   // produce endless stream of random X,Y coordinates.
   system.spawn_producer(

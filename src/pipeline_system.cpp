@@ -32,7 +32,7 @@ bool pipeline_system::active() {
   return is_active;
 }
 
-void pipeline_system::link(std::shared_ptr<storage_container> s) {
+void pipeline_system::link(std::shared_ptr<queue> s) {
   containers.push_back(s);
 }
 
@@ -66,14 +66,14 @@ void pipeline_system::run() {
   }
 }
 
-std::shared_ptr<storage_container> pipeline_system::create_storage(size_t max_items) {
+std::shared_ptr<queue> pipeline_system::create_queue(size_t max_items) {
   static int i = 1;
   std::string name = "storage " + std::to_string(i++);
-  return create_storage(name, max_items);
+  return create_queue(name, max_items);
 }
 
-std::shared_ptr<storage_container> pipeline_system::create_storage(const std::string &name, size_t max_items) {
-  auto instance = std::make_shared<storage_container>(name, *this, max_items);
+std::shared_ptr<queue> pipeline_system::create_queue(const std::string &name, size_t max_items) {
+  auto instance = std::make_shared<queue>(name, *this, max_items);
   link(instance);
   stats_.set_type(name, true);
   return instance;

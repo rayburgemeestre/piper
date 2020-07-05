@@ -9,5 +9,5 @@
 #include "message_type.hpp"
 #include "node.h"
 #include "pipeline_system.h"
-#include "storage_container.h"
+#include "queue.h"
 #include "util/a.hpp"

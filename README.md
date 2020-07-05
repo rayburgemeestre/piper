@@ -13,7 +13,7 @@ Sleeping and waking up is done by condition variables and ensures no CPU usage i
 case nodes cannot continue processing.
 
 Hooking up multiple nodes to the same input will create parallel workers, they can share the
-messages from their input queue, or all process the same messages.
+messages from their input queue, or all process the same messages. (see `example2.cpp`)
 
 ## Architecture
 
@@ -25,8 +25,14 @@ The fact that the second node has both makes it a transformer.
 
 The fact that the third node has only an input makes it a consumer.
 
+See `node::run()` for the core logic.
+
 Queues have a `push()` and `pop()` and in these operations is checked whether attached
 nodes need to be woken up. (Nodes sleep using condition variables controlled by the queue)
+
+The `pipeline_system` class starts all threads after wiring of the pipeline is complete.
+It will also collect metrics about the pipeline and supports visualizing the state of
+the individual parts.
 
 ## Example
 
@@ -53,8 +59,8 @@ struct in_circle : public message_type {
 int main() {
   pipeline_system system;
 
-  auto points = system.create_storage(5);
-  auto results = system.create_storage(5);
+  auto points = system.create_queue(5);
+  auto results = system.create_queue(5);
 
   // produce endless stream of random X,Y coordinates.
   system.spawn_producer(
@@ -93,8 +99,8 @@ int main() {
 ## Building
 
 ```bash
-make         # build
-make debug   # build debug version
+make         # build all
+make debug   # debug build all
 make format  # format source code with clang-format
 ```
 
@@ -115,14 +121,16 @@ git submodule add https://github.com/rayburgemeestre/piper libs/piper
 
 Then add path in your `CMakeLists.txt`
 
-    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libs/piper/")
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libs/piper/include/")
 
-... TODO ...
+Optionally add the source code directly to your own project, for example:
 
-Use in source code:
+    file(GLOB_RECURSE program_SOURCES << existing stuff >> "src/libs/piper/src/*")
+    add_executable(program ${program_SOURCES})
+    
+Optionally link against the library (after building it):
 
-```c++
-#include "piper.h"
-```
+    target_link_libraries(program libs/piper/libpiper.a)
 
-... TODO ...
+Start by including `piper.h`, and see examples for usage.
+

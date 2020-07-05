@@ -8,21 +8,21 @@
 
 #include "node.h"
 #include "pipeline_system.h"
-#include "storage_container.h"
+#include "queue.h"
 
-void storage_container::set_consumer(node *node_ptr, int id) {
+void queue::set_consumer(node *node_ptr, int id) {
   consumer_ids.insert(id);
   consumer_ptrs.push_back(node_ptr);
 }
 
-void storage_container::set_provider(node *node_ptr) {
+void queue::set_provider(node *node_ptr) {
   provider_ptrs.push_back(node_ptr);
 }
 
-storage_container::storage_container(const std::string &name, pipeline_system &sys, int max_items)
+queue::queue(const std::string &name, pipeline_system &sys, int max_items)
     : name(name), system(sys), max_items(max_items) {}
 
-void storage_container::sleep_until_not_full() {
+void queue::sleep_until_not_full() {
   std::unique_lock<std::mutex> lock(items_mut);
   if (items.size() < max_items) {
     return;
@@ -33,7 +33,7 @@ void storage_container::sleep_until_not_full() {
   cv.wait(lock, [&]() { return !is_full_unprotected() || !active; });
 }
 
-void storage_container::sleep_until_items_available(int id) {
+void queue::sleep_until_items_available(int id) {
   std::unique_lock<std::mutex> lock(items_mut);
   if (has_items_unprotected(id)) {
     return;
@@ -44,7 +44,7 @@ void storage_container::sleep_until_items_available(int id) {
   cv.wait(lock, [this, id]() { return has_items_unprotected(id) || !active; });
 }
 
-void storage_container::push(std::shared_ptr<message_type> value) {
+void queue::push(std::shared_ptr<message_type> value) {
   {
     std::unique_lock<std::mutex> scoped_lock(items_mut);
     items.emplace_back(std::make_pair(consumer_ids, std::move(value)));
@@ -56,21 +56,21 @@ void storage_container::push(std::shared_ptr<message_type> value) {
   cv.notify_all();
 }
 
-bool storage_container::is_full() {
+bool queue::is_full() {
   std::scoped_lock<std::mutex> lock(items_mut);
   return is_full_unprotected();
 }
 
-bool storage_container::is_full_unprotected() {
+bool queue::is_full_unprotected() {
   return items.size() >= max_items;
 }
 
-bool storage_container::has_items(int id) {
+bool queue::has_items(int id) {
   std::scoped_lock<std::mutex> lock(items_mut);
   return has_items_unprotected(id);
 }
 
-bool storage_container::has_items_unprotected(int id) {
+bool queue::has_items_unprotected(int id) {
   //  return consumer_items_available[id] != 0;
   for (const auto &item : items) {
     if (item.first.find(id) != item.first.end()) {
@@ -80,7 +80,7 @@ bool storage_container::has_items_unprotected(int id) {
   return false;
 }
 
-std::shared_ptr<message_type> storage_container::pop(int id) {
+std::shared_ptr<message_type> queue::pop(int id) {
   std::unique_lock<std::mutex> lock(items_mut);
   auto find = items.end();
   std::shared_ptr<message_type> ret = nullptr;
@@ -113,7 +113,7 @@ std::shared_ptr<message_type> storage_container::pop(int id) {
   return ret;
 }
 
-void storage_container::check_terminate() {
+void queue::check_terminate() {
   auto terminate = true;
   for (auto upstream : provider_ptrs) {
     if (upstream->active()) {
@@ -131,7 +131,7 @@ void storage_container::check_terminate() {
   }
 }
 
-void storage_container::deactivate() {
+void queue::deactivate() {
   system.stats_.set_active(name, false);
   active = false;
   cv.notify_all();

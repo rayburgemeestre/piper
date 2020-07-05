@@ -19,6 +19,7 @@ endif()
 
 add_definitions(${COMPILE_FLAGS})
 
+file(GLOB_RECURSE LIB_SRC "example.cpp" "src/**" "include/**")
 file(GLOB_RECURSE EXAMPLE_SRC "example.cpp" "src/**" "include/**")
 file(GLOB_RECURSE EXAMPLE2_SRC "example2.cpp" "src/**" "include/**")
 
@@ -31,3 +32,6 @@ target_link_libraries(example ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(example2 ${CMAKE_THREAD_LIBS_INIT})
 
 clangformat_setup(${EXAMPLE_SRC} ${EXAMPLE2_SRC})
+
+add_library(piper STATIC ${LIB_SRC})
+

@@ -6,7 +6,7 @@
 
 #include "node.h"
 #include "pipeline_system.h"
-#include "storage_container.h"
+#include "queue.h"
 
 static int global_counter = 1;
 
@@ -36,25 +36,25 @@ void node::set_id(int64_t id) {
 
 void node::init() {
   if (name_.empty()) {
-    if (!input_storage && output_storage) {
+    if (!input_queue && output_queue) {
       name_ = "producer " + std::to_string(global_counter);
-    } else if (input_storage && output_storage) {
+    } else if (input_queue && output_queue) {
       name_ = "transformer " + std::to_string(global_counter);
-    } else if (input_storage && !output_storage) {
+    } else if (input_queue && !output_queue) {
       name_ = "consumer " + std::to_string(global_counter);
     }
     global_counter++;
   }
 }
 
-void node::set_input_storage(std::shared_ptr<storage_container> ptr) {
-  input_storage = ptr;
-  input_storage->set_consumer(this, id_);
+void node::set_input_queue(std::shared_ptr<queue> ptr) {
+  input_queue = ptr;
+  input_queue->set_consumer(this, id_);
 }
 
-void node::set_output_storage(std::shared_ptr<storage_container> ptr) {
-  output_storage = ptr;
-  output_storage->set_provider(this);
+void node::set_output_queue(std::shared_ptr<queue> ptr) {
+  output_queue = ptr;
+  output_queue->set_provider(this);
 }
 
 void node::set_transform_type(transform_type tt) {
@@ -65,11 +65,11 @@ void node::run() {
   system.sleep();
   while (system.active() && active_) {
     // producer
-    if (!input_storage && output_storage) {
-      while (!output_storage->is_full() && active_) {
+    if (!input_queue && output_queue) {
+      while (!output_queue->is_full() && active_) {
         std::shared_ptr<message_type> ret = produce();
         if (ret) {
-          output_storage->push(std::move(ret));
+          output_queue->push(std::move(ret));
         } else {
           deactivate();
           break;
@@ -80,27 +80,27 @@ void node::run() {
       }
     }
     // transformer
-    else if (input_storage && output_storage) {
+    else if (input_queue && output_queue) {
       sleep_until_items_available();
-      while (input_storage->has_items(id_)) {
-        if (auto ret = input_storage->pop(id_)) {
+      while (input_queue->has_items(id_)) {
+        if (auto ret = input_queue->pop(id_)) {
           auto transformed = transform(std::move(ret));
           sleep_until_not_full();
-          output_storage->push(std::move(transformed));
+          output_queue->push(std::move(transformed));
         }
       }
-      if (!input_storage->active) {
+      if (!input_queue->active) {
         deactivate();
       }
     }
     // consumer
-    else if (input_storage && !output_storage) {
+    else if (input_queue && !output_queue) {
       sleep_until_items_available();
-      while (input_storage->has_items(id_)) {
-        auto ret2 = input_storage->pop(id_);
+      while (input_queue->has_items(id_)) {
+        auto ret2 = input_queue->pop(id_);
         consume(std::move(ret2));
       }
-      if (!input_storage->active) {
+      if (!input_queue->active) {
         deactivate();
       }
     }
@@ -131,20 +131,20 @@ void node::consume(std::shared_ptr<message_type> item) {
 
 void node::sleep_until_items_available() {
   system.stats_.set_sleep_until_not_empty(name_, true);
-  input_storage->sleep_until_items_available(id_);
+  input_queue->sleep_until_items_available(id_);
   system.stats_.set_sleep_until_not_empty(name_, false);
 }
 
 void node::sleep_until_not_full() {
   system.stats_.set_sleep_until_not_full(name_, true);
-  output_storage->sleep_until_not_full();
+  output_queue->sleep_until_not_full();
   system.stats_.set_sleep_until_not_full(name_, false);
 }
 
 void node::deactivate() {
   system.stats_.set_active(name_, false);
   active_ = false;
-  if (output_storage) output_storage->check_terminate();
+  if (output_queue) output_queue->check_terminate();
 }
 
 void node::join() {

@@ -21,8 +21,8 @@ struct seq_multiplied : public message_type {
 void test(transform_type tt) {
   pipeline_system system;
 
-  auto numbers = system.create_storage(1);
-  auto results = system.create_storage(1);
+  auto numbers = system.create_queue(1);
+  auto results = system.create_queue(1);
 
   // produce sequence of 1..10.
   size_t i = 1, max = 10;

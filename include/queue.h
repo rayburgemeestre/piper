@@ -17,7 +17,7 @@
 class pipeline_system;
 class node;
 
-class storage_container {
+class queue {
 public:
   std::condition_variable cv;
   std::vector<std::pair<std::set<int>, std::shared_ptr<message_type>>> items;
@@ -32,7 +32,7 @@ public:
   std::vector<node *> consumer_ptrs;
   std::vector<node *> provider_ptrs;
 
-  explicit storage_container(const std::string &name, pipeline_system &sys, int max_items);
+  explicit queue(const std::string &name, pipeline_system &sys, int max_items);
 
   void set_consumer(node *node_ptr, int id);
   void set_provider(node *node_ptr);

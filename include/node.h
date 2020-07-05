@@ -15,7 +15,7 @@
 #include <thread>
 
 #include "message_type.hpp"
-#include "storage_container.h"
+#include "queue.h"
 #include "transform_type.hpp"
 
 class pipeline_system;
@@ -27,8 +27,8 @@ private:
   std::string name_;
   std::thread runner;
   bool active_ = true;
-  std::shared_ptr<storage_container> input_storage;
-  std::shared_ptr<storage_container> output_storage;
+  std::shared_ptr<queue> input_queue;
+  std::shared_ptr<queue> output_queue;
   std::optional<transform_type> transform_type_;
   using message_t = std::shared_ptr<message_type>;
   using produce_fun_t = std::function<message_t()>;
@@ -48,8 +48,8 @@ public:
 
   void set_id(int64_t id);
   void init();
-  void set_input_storage(std::shared_ptr<storage_container> ptr);
-  void set_output_storage(std::shared_ptr<storage_container> ptr);
+  void set_input_queue(std::shared_ptr<queue> ptr);
+  void set_output_queue(std::shared_ptr<queue> ptr);
   void set_transform_type(transform_type tt);
   void run();
 
