@@ -118,14 +118,17 @@ void node::set_consume_function(consume_fun_t fun) {
 }
 
 std::shared_ptr<message_type> node::produce() {
+  system.stats_.add_counter(name_);
   return produce_fun();
 }
 
 std::shared_ptr<message_type> node::transform(std::shared_ptr<message_type> item) {
+  system.stats_.add_counter(name_);
   return transform_fun(std::move(item));
 }
 
 void node::consume(std::shared_ptr<message_type> item) {
+  system.stats_.add_counter(name_);
   return consume_fun(std::move(item));
 }
 

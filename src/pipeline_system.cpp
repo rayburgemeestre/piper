@@ -12,15 +12,13 @@
 
 #include "util/a.hpp"
 
-pipeline_system::pipeline_system() : runner(std::bind(&pipeline_system::run, this)) {}
+pipeline_system::pipeline_system() : pipeline_system(false) {}
+
+pipeline_system::pipeline_system(bool visualization_enabled)
+    : visualization_enabled(visualization_enabled), runner(std::bind(&pipeline_system::run, this)) {}
 
 pipeline_system::~pipeline_system() {
-  // this mechanism was causing strange crashes
-  // {
-  //   std::scoped_lock<std::mutex> l(mut_timeout);
-  //   is_active = false;
-  //   cv_timeout.notify_all();
-  // }
+  is_active = false;
   runner.join();
 }
 
@@ -45,7 +43,7 @@ void pipeline_system::start() {
   for (const auto &node : nodes) {
     node->init();
   }
-  stats_.setup();
+  stats_.setup(containers);
   {
     std::scoped_lock<std::mutex> lock(mut);
     started = true;
@@ -58,14 +56,10 @@ void pipeline_system::start() {
 }
 
 void pipeline_system::run() {
-  // this mechanism was causing strange crashes
-  // while (is_active) {
-  //   std::unique_lock<std::mutex> l(mut_timeout);
-  //   cv_timeout.wait_for(l, std::chrono::milliseconds(1000), [&]() { return !is_active; });
-  //   if (is_active) {
-  //     stats_.display();
-  //   }
-  // }
+  while (is_active && visualization_enabled) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    stats_.display();
+  }
 }
 
 std::shared_ptr<queue> pipeline_system::create_queue(size_t max_items) {

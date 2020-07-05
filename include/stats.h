@@ -7,8 +7,12 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
+
+class queue;
 
 class stats {
 private:
@@ -20,8 +24,17 @@ private:
     bool is_sleeping_until_not_empty;
     int size;
     bool active;
+    size_t counter;
+    size_t last_counter;
   };
   std::map<std::string, node_stats> stats_;
+  struct vis {
+    std::string input;
+    std::string storage;
+    std::string output;
+    std::string output_tt;
+  };
+  std::vector<vis> lines;
 
 public:
   void set_type(const std::string& name, bool is_storage);
@@ -29,6 +42,7 @@ public:
   void set_sleep_until_not_empty(const std::string& name, bool val);
   void set_size(const std::string& name, int size);
   void set_active(const std::string& name, bool active);
-  void setup();
+  void add_counter(const std::string& name);
+  void setup(const std::vector<std::shared_ptr<queue>>& containers);
   void display();
 };

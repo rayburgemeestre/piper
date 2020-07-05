@@ -21,6 +21,7 @@
 
 class pipeline_system {
 public:
+  bool visualization_enabled;
   std::vector<std::shared_ptr<queue>> containers;
   std::vector<node *> nodes;
   std::condition_variable cv;
@@ -29,12 +30,10 @@ public:
   bool is_active = true;
   stats stats_;
   std::thread runner;
-  // this mechanism was causing strange crashes
-  // std::mutex mut_timeout;
-  // std::condition_variable cv_timeout;
   std::vector<std::shared_ptr<node>> spawned;
 
-  pipeline_system();
+  explicit pipeline_system();
+  explicit pipeline_system(bool visualization_enabled);
   ~pipeline_system();
 
   void run();
