@@ -19,7 +19,7 @@ struct seq_multiplied : public message_type {
   explicit seq_multiplied(size_t i) : i(i) {}
 };
 
-void test(transform_type tt) {
+void run(transform_type tt) {
   pipeline_system system;
 
   auto numbers = system.create_queue(1);
@@ -50,12 +50,11 @@ void test(transform_type tt) {
 }
 
 int main() {
-  a(std::cout) << "workers same pool:" << std::endl;
-  test(transform_type::same_pool);
-  a(std::cout) << "" << std::endl << "---" << std::endl;
-
-  a(std::cout) << "workers same workload:" << std::endl;
-  test(transform_type::same_workload);
+  a(std::cout) << "workers same pool: ";
+  run(transform_type::same_pool);
   a(std::cout) << "" << std::endl;
-  a(std::cout) << "" << std::endl << "---" << std::endl;
+
+  a(std::cout) << "workers same workload: ";
+  run(transform_type::same_workload);
+  a(std::cout) << "" << std::endl;
 }
