@@ -12,8 +12,10 @@ set(PKG_CONFIG_EXECUTABLE "/usr/bin/pkg-config")
 find_package(Threads)
 
 if (NOT DEBUG)
+    #set (COMPILE_FLAGS "-O3 -Wall -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3 -flto -stdlib=libstdc++ -fsanitize=address")
     set (COMPILE_FLAGS "-O3 -Wall -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3 -flto -stdlib=libstdc++")
 else()
+    #set (COMPILE_FLAGS "-O0 -g -fno-inline -Wall  -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3 -fsanitize=address")
     set (COMPILE_FLAGS "-O0 -g -fno-inline -Wall  -funsigned-char -std=c++17 -fno-omit-frame-pointer -pedantic -mssse3")
 endif()
 
@@ -29,7 +31,11 @@ add_executable(example ${EXAMPLE_SRC})
 add_executable(example2 ${EXAMPLE2_SRC})
 
 target_link_libraries(example ${CMAKE_THREAD_LIBS_INIT})
+#target_link_libraries(example /usr/lib/clang/10.0.1/lib/linux/libclang_rt.asan-x86_64.a)
+#target_link_libraries(example -ldl)
 target_link_libraries(example2 ${CMAKE_THREAD_LIBS_INIT})
+#target_link_libraries(example2 /usr/lib/clang/10.0.1/lib/linux/libclang_rt.asan-x86_64.a)
+#target_link_libraries(example2 -ldl)
 
 clangformat_setup(${EXAMPLE_SRC} ${EXAMPLE2_SRC})
 

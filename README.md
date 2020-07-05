@@ -127,10 +127,10 @@ Optionally add the source code directly to your own project, for example:
 
     file(GLOB_RECURSE program_SOURCES << existing stuff >> "src/libs/piper/src/*")
     add_executable(program ${program_SOURCES})
-    
+
 Optionally link against the library (after building it):
 
-    target_link_libraries(program libs/piper/libpiper.a)
+    target_link_libraries(program libs/piper/build/libpiper.a)
 
 Start by including `piper.h`, and see examples for usage.
 

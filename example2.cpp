@@ -29,6 +29,7 @@ void test(transform_type tt) {
   size_t max = 10;
   std::atomic<size_t> i = 1;
   system.spawn_producer(
+      "producer",
       [&]() -> std::shared_ptr<seq> {
         if (i <= max) return std::make_shared<seq>(i++);
         return nullptr;
@@ -38,11 +39,12 @@ void test(transform_type tt) {
   // multiply number by ten with three workers
   auto multiply_by_ten = [](auto seq) -> auto { return std::make_shared<seq_multiplied>(seq->i * 10); };
   for (int i = 0; i < 3; i++) {
-    system.spawn_transformer<seq>(multiply_by_ten, numbers, results, tt);
+    system.spawn_transformer<seq>("transformer " + std::to_string(i), multiply_by_ten, numbers, results, tt);
   }
 
   // print results
-  system.spawn_consumer<seq_multiplied>([](auto result) { a(std::cout) << result->i << ", "; }, results);
+  system.spawn_consumer<seq_multiplied>(
+      "consumer", [](auto result) { a(std::cout) << result->i << ", "; }, results);
 
   system.start();
 }
@@ -55,4 +57,5 @@ int main() {
   a(std::cout) << "workers same workload:" << std::endl;
   test(transform_type::same_workload);
   a(std::cout) << "" << std::endl;
+  a(std::cout) << "" << std::endl << "---" << std::endl;
 }

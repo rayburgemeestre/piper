@@ -29,8 +29,9 @@ public:
   bool is_active = true;
   stats stats_;
   std::thread runner;
-  std::mutex mut_timeout;
-  std::condition_variable cv_timeout;
+  // this mechanism was causing strange crashes
+  // std::mutex mut_timeout;
+  // std::condition_variable cv_timeout;
   std::vector<std::shared_ptr<node>> spawned;
 
   pipeline_system();

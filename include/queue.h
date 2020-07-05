@@ -45,5 +45,5 @@ public:
   bool has_items_unprotected(int id);
   std::shared_ptr<message_type> pop(int id);
   void check_terminate();
-  void deactivate();
+  void deactivate(std::unique_lock<std::mutex> &lock);
 };

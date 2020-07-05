@@ -104,16 +104,17 @@ std::shared_ptr<message_type> queue::pop(int id) {
     system.stats_.set_size(name, items.size());
   }
   bool is_empty = items.empty();
-  lock.unlock();
   if (is_empty && terminating) {
-    deactivate();
+    deactivate(lock);
   } else {
+    lock.unlock();
     cv.notify_all();
   }
   return ret;
 }
 
 void queue::check_terminate() {
+  std::unique_lock<std::mutex> lock(items_mut);
   auto terminate = true;
   for (auto upstream : provider_ptrs) {
     if (upstream->active()) {
@@ -122,17 +123,16 @@ void queue::check_terminate() {
   }
   if (terminate) {
     terminating = true;
-    std::unique_lock<std::mutex> lock(items_mut);
     // deactivate now (otherwise after pop() of the last item)
     if (items.empty()) {
-      lock.unlock();
-      deactivate();
+      deactivate(lock);
     }
   }
 }
 
-void queue::deactivate() {
+void queue::deactivate(std::unique_lock<std::mutex> &lock) {
   system.stats_.set_active(name, false);
   active = false;
+  lock.unlock();
   cv.notify_all();
 }

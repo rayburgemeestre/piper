@@ -15,11 +15,12 @@
 pipeline_system::pipeline_system() : runner(std::bind(&pipeline_system::run, this)) {}
 
 pipeline_system::~pipeline_system() {
-  is_active = false;
-  {
-    std::unique_lock l(mut_timeout);
-    cv_timeout.notify_all();
-  }
+  // this mechanism was causing strange crashes
+  // {
+  //   std::scoped_lock<std::mutex> l(mut_timeout);
+  //   is_active = false;
+  //   cv_timeout.notify_all();
+  // }
   runner.join();
 }
 
@@ -57,13 +58,14 @@ void pipeline_system::start() {
 }
 
 void pipeline_system::run() {
-  while (is_active) {
-    std::unique_lock l(mut_timeout);
-    cv_timeout.wait_for(l, std::chrono::milliseconds(1000), [&]() { return !is_active; });
-    if (is_active) {
-      // stats_.display();
-    }
-  }
+  // this mechanism was causing strange crashes
+  // while (is_active) {
+  //   std::unique_lock<std::mutex> l(mut_timeout);
+  //   cv_timeout.wait_for(l, std::chrono::milliseconds(1000), [&]() { return !is_active; });
+  //   if (is_active) {
+  //     stats_.display();
+  //   }
+  // }
 }
 
 std::shared_ptr<queue> pipeline_system::create_queue(size_t max_items) {
