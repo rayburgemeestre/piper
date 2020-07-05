@@ -66,6 +66,12 @@ void pipeline_system::run() {
   }
 }
 
+std::shared_ptr<storage_container> pipeline_system::create_storage(size_t max_items) {
+  static int i = 1;
+  std::string name = "storage " + std::to_string(i++);
+  return create_storage(name, max_items);
+}
+
 std::shared_ptr<storage_container> pipeline_system::create_storage(const std::string &name, size_t max_items) {
   auto instance = std::make_shared<storage_container>(name, *this, max_items);
   link(instance);

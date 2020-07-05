@@ -17,14 +17,14 @@ struct random_xy : public message_type {
 
 struct in_circle : public message_type {
   bool value;
-  in_circle(bool value) : value(value) {}
+  explicit in_circle(bool value) : value(value) {}
 };
 
 int main() {
   pipeline_system system;
 
-  auto points = system.create_storage("points", 5);
-  auto results = system.create_storage("results", 5);
+  auto points = system.create_storage(5);
+  auto results = system.create_storage(5);
 
   // produce endless stream of random X,Y coordinates.
   system.spawn_producer(

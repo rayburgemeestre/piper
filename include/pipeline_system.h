@@ -43,6 +43,7 @@ public:
   void start();
   bool active();
 
+  std::shared_ptr<storage_container> create_storage(size_t max_items);
   std::shared_ptr<storage_container> create_storage(const std::string &name, size_t max_items);
 
   template <typename F>

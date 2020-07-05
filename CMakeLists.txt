@@ -19,12 +19,15 @@ endif()
 
 add_definitions(${COMPILE_FLAGS})
 
-file(GLOB_RECURSE SOURCES "main.cpp" "src/**" "include/**")
+file(GLOB_RECURSE EXAMPLE_SRC "example.cpp" "src/**" "include/**")
+file(GLOB_RECURSE EXAMPLE2_SRC "example2.cpp" "src/**" "include/**")
 
 include_directories("include")
 
-add_executable(example ${SOURCES})
+add_executable(example ${EXAMPLE_SRC})
+add_executable(example2 ${EXAMPLE2_SRC})
 
 target_link_libraries(example ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(example2 ${CMAKE_THREAD_LIBS_INIT})
 
-target_clangformat_setup(example)
+clangformat_setup(${EXAMPLE_SRC} ${EXAMPLE2_SRC})

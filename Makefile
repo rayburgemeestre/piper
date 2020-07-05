@@ -4,14 +4,13 @@ fast-build:
 	mkdir -p build
 	pushd build && \
 	CXX=$(which c++) cmake .. && \
-	make -j $$(nproc) example && \
-	strip --strip-debug example
+	make -j $$(nproc)
 
 debug:
 	mkdir -p build
 	pushd build && \
 	CXX=$(which c++) cmake -DDEBUG=on .. && \
-	make VERBOSE=1 -j $$(nproc) example
+	make VERBOSE=1 -j $$(nproc)
 
 format:
 	cmake --build build --target clangformat

@@ -30,7 +30,7 @@ void storage_container::sleep_until_not_full() {
   if (!active) {
     return;
   }
-  cv.wait(lock, [&]() { return !is_full_unprotected() || !active || !system.active(); });
+  cv.wait(lock, [&]() { return !is_full_unprotected() || !active; });
 }
 
 void storage_container::sleep_until_items_available(int id) {
@@ -41,7 +41,7 @@ void storage_container::sleep_until_items_available(int id) {
   if (!active) {
     return;
   }
-  cv.wait(lock, [this, id]() { return has_items_unprotected(id) || !active || !system.active(); });
+  cv.wait(lock, [this, id]() { return has_items_unprotected(id) || !active; });
 }
 
 void storage_container::push(std::shared_ptr<message_type> value) {
@@ -135,7 +135,4 @@ void storage_container::deactivate() {
   system.stats_.set_active(name, false);
   active = false;
   cv.notify_all();
-  for (const auto &consumer : consumer_ptrs) {
-    consumer->deactivate();
-  }
 }
