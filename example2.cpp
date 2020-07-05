@@ -6,6 +6,7 @@
 
 #include "piper.h"
 
+#include <atomic>
 #include <iostream>
 
 struct seq : public message_type {
@@ -25,7 +26,8 @@ void test(transform_type tt) {
   auto results = system.create_queue(1);
 
   // produce sequence of 1..10.
-  size_t i = 1, max = 10;
+  size_t max = 10;
+  std::atomic<size_t> i = 1;
   system.spawn_producer(
       [&]() -> std::shared_ptr<seq> {
         if (i <= max) return std::make_shared<seq>(i++);
@@ -35,7 +37,7 @@ void test(transform_type tt) {
 
   // multiply number by ten with three workers
   auto multiply_by_ten = [](auto seq) -> auto { return std::make_shared<seq_multiplied>(seq->i * 10); };
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     system.spawn_transformer<seq>(multiply_by_ten, numbers, results, tt);
   }
 
