@@ -27,31 +27,34 @@ int main() {
   auto results = system.create_storage("results", 5);
 
   // produce endless stream of random X,Y coordinates.
-  system.spawn_producer(producer_function<random_xy>([&]() -> auto {
-                          static std::mt19937 gen;
-                          auto x = (gen() / double(gen.max()));
-                          auto y = (gen() / double(gen.max()));
-                          return std::make_shared<random_xy>(x, y);
-                        }),
-                        points);
+  system.spawn_producer(
+      [&]() -> auto {
+        static std::mt19937 gen;
+        auto x = (gen() / double(gen.max()));
+        auto y = (gen() / double(gen.max()));
+        return std::make_shared<random_xy>(x, y);
+      },
+      points);
 
   // check if these points are within a circle
-  system.spawn_transformer(transform_function<random_xy, in_circle>([](auto job) -> auto {
-                             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                             auto dist = sqrt(pow(job->x - 0.5, 2) + pow(job->y - 0.5, 2));
-                             return std::make_shared<in_circle>(dist <= 0.5);
-                           }),
-                           points,
-                           results);
+  system.spawn_transformer<random_xy>(
+      [](auto point) -> auto {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        auto dist = sqrt(pow(point->x - 0.5, 2) + pow(point->y - 0.5, 2));
+        return std::make_shared<in_circle>(dist <= 0.5);
+      },
+      points,
+      results);
 
   // estimate pi based on results
-  system.spawn_consumer(consume_function<in_circle>([&](auto job) {
-                          static size_t nom = 0, denom = 0;
-                          if (job->value) nom++;
-                          denom++;
-                          a(std::cout) << "Estimated pi: " << 4 * (nom / (double)denom) << std::endl;
-                        }),
-                        results);
+  system.spawn_consumer<in_circle>(
+      [](auto result) {
+        static size_t nom = 0, denom = 0;
+        if (result->value) nom++;
+        denom++;
+        a(std::cout) << "Estimated pi: " << 4 * (nom / (double)denom) << std::endl;
+      },
+      results);
 
   system.start();
 }
