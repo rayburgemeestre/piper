@@ -165,6 +165,8 @@ The visualization also shows the workers are dividing the available work correct
 The previous visualization example (`example3.cpp`) will run at around 200.000 FPS on my laptop
 after removing the artificial delay. In `example4.cpp` there are some more numbers.
 
+![piper perf](docs/fps.gif "piper perf")
+
 ## Usage in projects
 
 First add as submodule:
