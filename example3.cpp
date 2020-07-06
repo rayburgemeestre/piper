@@ -24,24 +24,13 @@ int main() {
       jobs,
       processed);
 
-  system.spawn_transformer<simple_msg>(
-      "worker 1",
-      [&](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
-      processed,
-      collected,
-      transform_type::same_pool);
-  system.spawn_transformer<simple_msg>(
-      "worker 2",
-      [&](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
-      processed,
-      collected,
-      transform_type::same_pool);
-  system.spawn_transformer<simple_msg>(
-      "worker 3",
-      [&](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
-      processed,
-      collected,
-      transform_type::same_pool);
+  for (int i = 0; i < 3; i++)
+    system.spawn_transformer<simple_msg>(
+        "worker " + std::to_string(i),
+        [&](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
+        processed,
+        collected,
+        transform_type::same_pool);
 
   system.spawn_consumer<simple_msg>(
       "printer",

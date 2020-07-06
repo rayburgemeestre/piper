@@ -110,54 +110,60 @@ make format       # format source code with clang-format
 ./build/example   # Estimate PI
 ./build/example2  # multiple workers
 ./build/example3  # CLI visualization
+./build/example4  # performance tests
 ```
 
-## CLI visualization (from `example3.cpp`)
+## Visualization from `example3.cpp`
 
 ```
-      input                        storage                      output       
-                                                                             
+      input                        storage                      output
+
 +-----------------+          /-----------------\    ?     +-----------------+
 |    producer     |--------->|      jobs       |--------->|   transformer   |
 +-----------------+          \-----------------/          +-----------------+
-    [sleeping]       100 FPS        Q:10         100 FPS      [sleeping]     
-                                                                             
+    [sleeping]       100 FPS        Q:10         100 FPS      [sleeping]
+
 +-----------------+          /-----------------\    OR    +-----------------+
 |   transformer   |--------->|    processed    |--------->|    worker 1     |
 +-----------------+          \-----------------/          +-----------------+
-    [sleeping]       100 FPS        Q:10         38 FPS       [sleeping]     
-                                      |                                      
+    [sleeping]       100 FPS        Q:10         38 FPS       [sleeping]
+                                      |
                                       |             OR    +-----------------+
                                       |------------------>|    worker 2     |
                                       |                   +-----------------+
-                                      |      30 FPS           [sleeping]     
-                                      |                                      
+                                      |      30 FPS           [sleeping]
+                                      |
                                       |             OR    +-----------------+
                                       |------------------>|    worker 3     |
                                       |                   +-----------------+
-                                      |      32 FPS           [sleeping]     
-                                                                             
+                                      |      32 FPS           [sleeping]
+
 +-----------------+          /-----------------\    ?     +-----------------+
 |    worker 1     |--------->|    collected    |--------->|     printer     |
 +-----------------+          \-----------------/          +-----------------+
-    [sleeping]       38 FPS         Q:10         99 FPS                      
-                                      ^                                      
-+-----------------+                   |                                      
-|    worker 2     |-------------------+                                      
-+-----------------+                   |                                      
-    [sleeping]           30 FPS       |                                      
-                                      ^                                      
-+-----------------+                   |                                      
-|    worker 3     |-------------------+                                      
-+-----------------+                   |                                      
-    [sleeping]           32 FPS       |                                      
+    [sleeping]       38 FPS         Q:10        100 FPS
+                                      ^
++-----------------+                   |
+|    worker 2     |-------------------+
++-----------------+                   |
+    [sleeping]           30 FPS       |
+                                      ^
++-----------------+                   |
+|    worker 3     |-------------------+
++-----------------+                   |
+    [sleeping]           32 FPS       |
 ```
 
 The printer consumer is deliberately made slow and causes all queues to become full in
 this example. This will result in all components sleeping until they can deliver something
 new for their output storage.
 
-The visualization also shows the workers are dividing the available work.
+The visualization also shows the workers are dividing the available work correctly.
+
+## Performance
+
+The previous visualization example (`example3.cpp`) will run at around 200.000 FPS on my laptop
+after removing the artificial delay. In `example4.cpp` there are some more numbers.
 
 ## Usage in projects
 
