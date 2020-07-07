@@ -58,7 +58,9 @@ void pipeline_system::start() {
 void pipeline_system::run() {
   while (is_active && visualization_enabled) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    stats_.display();
+    if (visualization_enabled) {
+      stats_.display();
+    }
   }
 }
 

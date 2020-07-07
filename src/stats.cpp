@@ -7,8 +7,11 @@
 #include "stats.h"
 
 #include <iostream>
+#include <sstream>
 #include <thread>
 
+#include "node.h"
+#include "queue.h"
 #include "util/a.hpp"
 
 void stats::set_type(const std::string& name, bool is_storage) {
@@ -44,20 +47,20 @@ void stats::add_counter(const std::string& name) {
   stats_[name].counter++;
 }
 
-#include <sstream>
-
-#include "node.h"
-#include "queue.h"
-
 /**
  * This will be the only function in the stats class dealing with queues and nodes.
  * When displaying metrics we cannot assume these objects are still running.
  */
 void stats::setup(const std::vector<std::shared_ptr<queue>>& containers) {
   for (const auto& container : containers) {
-    for (size_t i = 0; i < std::max(container->provider_ptrs.size(), container->consumer_ptrs.size()); i++) {
+    size_t n = std::max(container->provider_ptrs.size(), container->consumer_ptrs.size());
+    for (size_t i = 0; i < n; i++) {
       struct vis v;
-      v.storage = i == 0 ? container->name : "";
+      v.storage = "";
+      if (i == 0) {
+        v.storage = container->name;
+        v.input = "** external **";
+      }
       if (i < container->provider_ptrs.size()) {
         auto provider = container->provider_ptrs[i];
         v.input = provider->name();
@@ -67,7 +70,7 @@ void stats::setup(const std::vector<std::shared_ptr<queue>>& containers) {
         v.output = consumer->name();
         v.output_tt = (consumer->get_transform_type()
                            ? (*consumer->get_transform_type() == transform_type::same_workload ? "AND" : "OR")
-                           : "?");
+                           : "");
       }
       lines.push_back(v);
     }
@@ -139,13 +142,13 @@ void stats::display() {
       std::cout << "\033[2J\033[1;1H";
       a(std::cout) << R"(      input                        storage                      output       )" << std::endl;
     }
-    if (line.input == "") {
+    if (line.input.empty()) {
       a(std::cout) << R"(                                      |                                      )" << std::endl;
       a(std::cout) << R"(                                      |         )"<< X <<"+-----------------+" << std::endl;
       a(std::cout) << R"(                                      |------------------>|)" << outp << R"(|)" << std::endl;
       a(std::cout) << R"(                                      |                   +-----------------+)" << std::endl;
       a(std::cout) << R"(                                      |)" << outfps << R"( )" << ousl << R"( )" << std::endl;
-    } else if (line.output == "") {
+    } else if (line.output.empty()) {
       a(std::cout) << R"(                                      ^                                      )" << std::endl;
       a(std::cout) << R"(+-----------------+                   |                                      )" << std::endl;
       a(std::cout) << R"(|)" << inpu << R"(|-------------------+                                      )" << std::endl;
