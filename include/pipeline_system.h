@@ -111,7 +111,15 @@ void pipeline_system::spawn_transformer(std::string name,
     n->set_id(uid++);
   }
 
-  auto wrapper_fun = [&](auto in) -> auto { return fun(std::dynamic_pointer_cast<IN>(in)); };
+  /* Story time: this wrapper_fun was capturing by [&] initially, and caused quite a bit of issues
+   * when the optimizer did its magic, apparently it got rid of the captures made by the lambda it
+   * was wrapping around. This included all captures, such as 'this', which got random values.
+   * I guess the entire lambda was basically returned to the free store. "fun" is an r-value, so it
+   * makes sense it was considered a moved-away-from thing that goes out of scope once this function
+   * exits. The point was to move it into this wrapper function of course, so copying it solves it.
+   * I don't know why this issue didn't present itself during Debug builds.
+   */
+  auto wrapper_fun = [=](auto in) -> auto { return fun(std::dynamic_pointer_cast<IN>(in)); };
 
   n->set_transform_function(wrapper_fun);
   n->set_input_queue(input);
@@ -126,7 +134,7 @@ template <typename IN, typename F>
 void pipeline_system::spawn_consumer(std::string name, F &&fun, std::shared_ptr<queue> input) {
   auto n = std::make_shared<node>(name, *this);
 
-  auto wrapper_fun = [&](std::shared_ptr<message_type> in) { return fun(std::dynamic_pointer_cast<IN>(in)); };
+  auto wrapper_fun = [=](std::shared_ptr<message_type> in) { return fun(std::dynamic_pointer_cast<IN>(in)); };
 
   n->set_consume_function(wrapper_fun);
   n->set_input_queue(input);
