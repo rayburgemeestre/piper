@@ -39,7 +39,7 @@ void pipeline_system::link(node *n) {
   nodes.push_back(n);
 }
 
-void pipeline_system::start() {
+void pipeline_system::start(bool auto_join_threads) {
   for (const auto &node : nodes) {
     node->init();
   }
@@ -50,6 +50,12 @@ void pipeline_system::start() {
     cv.notify_all();
   }
 
+  if (auto_join_threads) {
+    explicit_join();
+  }
+}
+
+void pipeline_system::explicit_join() {
   for (const auto &node : nodes) {
     node->join();
   }

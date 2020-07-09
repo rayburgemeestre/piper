@@ -40,7 +40,8 @@ public:
   void link(std::shared_ptr<queue>);
   void link(node *);
   void sleep();
-  void start();
+  void start(bool auto_join_threads = true);
+  void explicit_join();
   bool active();
 
   std::shared_ptr<queue> create_queue(size_t max_items);
