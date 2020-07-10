@@ -20,7 +20,7 @@ void queue::set_provider(node *node_ptr) {
 }
 
 queue::queue(const std::string &name, pipeline_system &sys, int max_items)
-    : name(name), system(sys), max_items(max_items) {}
+    : name(name), system(sys), max_items(max_items), consumer_ids({0}) {}
 
 void queue::sleep_until_not_full() {
   std::unique_lock<std::mutex> lock(items_mut);

@@ -105,7 +105,7 @@ void pipeline_system::spawn_transformer(std::string name,
                                         std::optional<transform_type> tt) {
   auto n = std::make_shared<node>(name, *this);
   static int uid = 1;
-  if (tt && *tt == transform_type::same_pool) {
+  if (tt || *tt == transform_type::same_pool) {
     n->set_id(0);
   } else {
     n->set_id(uid++);
