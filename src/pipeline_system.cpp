@@ -82,3 +82,7 @@ std::shared_ptr<queue> pipeline_system::create_queue(const std::string &name, si
   stats_.set_type(name, true);
   return instance;
 }
+
+const stats &pipeline_system::stats() const {
+  return stats_;
+}

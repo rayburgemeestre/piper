@@ -67,6 +67,8 @@ public:
                          std::optional<transform_type> tt = std::nullopt);
   template <typename IN, typename F>
   void spawn_consumer(F &&fun, std::shared_ptr<queue> input);
+
+  const stats &stats() const;
 };
 
 // spawn functions

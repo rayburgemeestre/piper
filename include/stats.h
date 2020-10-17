@@ -15,8 +15,7 @@
 class queue;
 
 class stats {
-private:
-  std::mutex stats_mut;
+public:
   struct node_stats {
     std::string name;
     bool is_storage;
@@ -27,6 +26,9 @@ private:
     size_t counter;
     size_t last_counter;
   };
+
+private:
+  mutable std::mutex stats_mut;
   std::map<std::string, node_stats> stats_;
   struct vis {
     std::string input;
@@ -45,4 +47,5 @@ public:
   void add_counter(const std::string& name);
   void setup(const std::vector<std::shared_ptr<queue>>& containers);
   void display();
+  decltype(stats_) get_raw() const;
 };

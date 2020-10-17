@@ -168,3 +168,8 @@ void stats::display() {
     pair.second.last_counter = pair.second.counter;
   }
 }
+
+std::map<std::string, stats::node_stats> stats::get_raw() const {
+  std::scoped_lock lk(stats_mut);
+  return stats_;
+}
