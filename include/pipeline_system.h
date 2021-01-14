@@ -68,7 +68,7 @@ public:
   template <typename IN, typename F>
   void spawn_consumer(F &&fun, std::shared_ptr<queue> input);
 
-  const stats &stats() const;
+  const stats &get_stats() const;
 };
 
 // spawn functions
