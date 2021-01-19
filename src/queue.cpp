@@ -5,6 +5,7 @@
  */
 
 #include <sstream>
+#include <utility>
 
 #include "node.h"
 #include "pipeline_system.h"
@@ -19,8 +20,8 @@ void queue::set_provider(node *node_ptr) {
   provider_ptrs.push_back(node_ptr);
 }
 
-queue::queue(const std::string &name, pipeline_system &sys, int max_items)
-    : name(name), system(sys), max_items(max_items), consumer_ids({0}) {}
+queue::queue(std::string name, pipeline_system &sys, int max_items)
+    : name(std::move(name)), system(sys), max_items(max_items), consumer_ids({0}) {}
 
 void queue::sleep_until_not_full() {
   std::unique_lock<std::mutex> lock(items_mut);
@@ -61,7 +62,7 @@ bool queue::is_full() {
   return is_full_unprotected();
 }
 
-bool queue::is_full_unprotected() {
+bool queue::is_full_unprotected() const {
   return items.size() >= max_items;
 }
 
@@ -71,13 +72,8 @@ bool queue::has_items(int id) {
 }
 
 bool queue::has_items_unprotected(int id) {
-  //  return consumer_items_available[id] != 0;
-  for (const auto &item : items) {
-    if (item.first.find(id) != item.first.end()) {
-      return true;  // there is something for this id
-    }
-  }
-  return false;
+  return std::any_of(
+      items.begin(), items.end(), [&id](const auto &item) { return item.first.find(id) != item.first.end(); });
 }
 
 std::shared_ptr<message_type> queue::pop(int id) {

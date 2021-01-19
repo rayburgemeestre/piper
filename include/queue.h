@@ -32,7 +32,7 @@ public:
   std::vector<node *> consumer_ptrs;
   std::vector<node *> provider_ptrs;
 
-  explicit queue(const std::string &name, pipeline_system &sys, int max_items);
+  explicit queue(std::string name, pipeline_system &sys, int max_items);
 
   void set_consumer(node *node_ptr, int id);
   void set_provider(node *node_ptr);
@@ -40,7 +40,7 @@ public:
   void sleep_until_items_available(int id);
   void push(std::shared_ptr<message_type> value);
   bool is_full();
-  bool is_full_unprotected();
+  bool is_full_unprotected() const;
   bool has_items(int id);
   bool has_items_unprotected(int id);
   std::shared_ptr<message_type> pop(int id);
