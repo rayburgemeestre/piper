@@ -25,7 +25,7 @@ public:
   std::mutex items_mut;
   std::string name;
   pipeline_system &system;
-  int max_items = 10;
+  size_t max_items = 10;
   bool active = true;
   bool terminating = false;
   std::set<int> consumer_ids;
