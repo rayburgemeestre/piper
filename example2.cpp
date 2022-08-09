@@ -30,7 +30,7 @@ void run(transform_type tt) {
   std::atomic<size_t> i = 1;
   system.spawn_producer(
       "producer",
-      [&]() -> std::shared_ptr<seq> {
+      [&i, max]() -> std::shared_ptr<seq> {
         if (i <= max) return std::make_shared<seq>(i++);
         return nullptr;
       },

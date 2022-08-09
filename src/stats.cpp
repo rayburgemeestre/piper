@@ -66,11 +66,10 @@ void stats::setup(const std::vector<std::shared_ptr<queue>>& containers) {
         v.input = provider->name();
       }
       if (i < container->consumer_ptrs.size()) {
-        auto consumer = container->consumer_ptrs[i];
+        const auto consumer = container->consumer_ptrs[i];
         v.output = consumer->name();
-        v.output_tt = (consumer->get_transform_type()
-                           ? (*consumer->get_transform_type() == transform_type::same_workload ? "AND" : "OR")
-                           : "");
+        const auto tt = (*consumer->get_transform_type() == transform_type::same_workload ? "AND" : "OR");
+        v.output_tt = (consumer->get_transform_type() ? tt : "");
       }
       lines.push_back(v);
     }
@@ -164,8 +163,8 @@ void stats::display() {
     // clang-format on
     first = false;
   }
-  for (auto& pair : stats_) {
-    pair.second.last_counter = pair.second.counter;
+  for (auto& [_, stats] : stats_) {
+    stats.last_counter = stats.counter;
   }
 }
 

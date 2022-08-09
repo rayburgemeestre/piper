@@ -64,7 +64,7 @@ int main() {
 
   // produce endless stream of random X,Y coordinates.
   system.spawn_producer(
-      [&]() -> auto {
+      []() -> auto {
         static std::mt19937 gen;
         auto x = (gen() / double(gen.max()));
         auto y = (gen() / double(gen.max()));

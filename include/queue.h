@@ -28,7 +28,7 @@ public:
   size_t max_items = 10;
   bool active = true;
   bool terminating = false;
-  std::set<int> consumer_ids;
+  std::set<int> consumer_ids = {0};
   std::vector<node *> consumer_ptrs;
   std::vector<node *> provider_ptrs;
 

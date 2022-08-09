@@ -21,21 +21,21 @@ void queue::set_provider(node *node_ptr) {
 }
 
 queue::queue(std::string name, pipeline_system &sys, int max_items)
-    : name(std::move(name)), system(sys), max_items(max_items), consumer_ids({0}) {}
+    : name(std::move(name)), system(sys), max_items(max_items) {}
 
 void queue::sleep_until_not_full() {
-  std::unique_lock<std::mutex> lock(items_mut);
+  std::unique_lock lock(items_mut);
   if (items.size() < max_items) {
     return;
   }
   if (!active) {
     return;
   }
-  cv.wait(lock, [&]() { return !is_full_unprotected() || !active; });
+  cv.wait(lock, [this]() { return !is_full_unprotected() || !active; });
 }
 
 void queue::sleep_until_items_available(int id) {
-  std::unique_lock<std::mutex> lock(items_mut);
+  std::unique_lock lock(items_mut);
   if (has_items_unprotected(id)) {
     return;
   }
@@ -47,12 +47,9 @@ void queue::sleep_until_items_available(int id) {
 
 void queue::push(std::shared_ptr<message_type> value) {
   {
-    std::unique_lock<std::mutex> scoped_lock(items_mut);
-    items.emplace_back(std::make_pair(consumer_ids, std::move(value)));
+    std::unique_lock scoped_lock(items_mut);
+    items.emplace_back(consumer_ids, std::move(value));
     system.stats_.set_size(name, items.size());
-    //    for (const auto &consumer : consumer_ids) {
-    //      consumer_items_available[consumer]++;
-    //    }
   }
   cv.notify_all();
 }
@@ -77,13 +74,12 @@ bool queue::has_items_unprotected(int id) {
 }
 
 std::shared_ptr<message_type> queue::pop(int id) {
-  std::unique_lock<std::mutex> lock(items_mut);
+  std::unique_lock lock(items_mut);
   auto find = items.end();
   std::shared_ptr<message_type> ret = nullptr;
   for (auto &pair : items) {
     if (pair.first.find(id) != pair.first.end()) {
       pair.first.erase(id);
-      //      consumer_items_available[id]--;
       if (!pair.first.empty()) {
         ret = pair.second;
       } else {
@@ -99,8 +95,7 @@ std::shared_ptr<message_type> queue::pop(int id) {
     items.erase(find);
     system.stats_.set_size(name, items.size());
   }
-  bool is_empty = items.empty();
-  if (is_empty && terminating) {
+  if (bool is_empty = items.empty(); is_empty && terminating) {
     deactivate(lock);
   } else {
     lock.unlock();
@@ -110,7 +105,7 @@ std::shared_ptr<message_type> queue::pop(int id) {
 }
 
 void queue::check_terminate() {
-  std::unique_lock<std::mutex> lock(items_mut);
+  std::unique_lock lock(items_mut);
   auto terminate = true;
   for (auto upstream : provider_ptrs) {
     if (upstream->active()) {

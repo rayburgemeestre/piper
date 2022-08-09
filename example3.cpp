@@ -16,18 +16,18 @@ int main() {
   auto collected = system.create_queue("collected", 10);
 
   system.spawn_producer(
-      "producer", [&]() -> std::shared_ptr<simple_msg> { return std::make_shared<simple_msg>(); }, jobs);
+      "producer", []() -> std::shared_ptr<simple_msg> { return std::make_shared<simple_msg>(); }, jobs);
 
   system.spawn_transformer<simple_msg>(
       "transformer",
-      [&](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
+      [](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
       jobs,
       processed);
 
   for (int i = 0; i < 3; i++)
     system.spawn_transformer<simple_msg>(
         "worker " + std::to_string(i),
-        [&](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
+        [](std::shared_ptr<simple_msg> job) -> std::shared_ptr<simple_msg> { return job; },
         processed,
         collected,
         transform_type::same_pool);

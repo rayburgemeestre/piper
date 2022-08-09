@@ -42,7 +42,7 @@ public:
   void sleep();
   void start(bool auto_join_threads = true);
   void explicit_join();
-  bool active();
+  bool active() const;
 
   std::shared_ptr<queue> create_queue(size_t max_items);
   std::shared_ptr<queue> create_queue(const std::string &name, size_t max_items);

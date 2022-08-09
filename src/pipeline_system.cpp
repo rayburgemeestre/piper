@@ -5,7 +5,6 @@
  */
 
 #include "pipeline_system.h"
-//#include "line_type.hpp"
 #include "node.h"
 
 #include <iostream>
@@ -23,11 +22,11 @@ pipeline_system::~pipeline_system() {
 }
 
 void pipeline_system::sleep() {
-  std::unique_lock<std::mutex> lock(mut);
-  cv.wait(lock, [&]() { return started; });
+  std::unique_lock lock(mut);
+  cv.wait(lock, [=]() { return started; });
 }
 
-bool pipeline_system::active() {
+bool pipeline_system::active() const {
   return is_active;
 }
 

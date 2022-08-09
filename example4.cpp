@@ -24,7 +24,7 @@ int main() {
     system.spawn_producer(
         []() -> auto { return std::make_shared<message_type>(); }, q1);
     system.spawn_transformer<message_type>(
-        [&](auto job) -> auto { return job; }, q1, q2);
+        [](auto job) -> auto { return job; }, q1, q2);
     system.spawn_consumer<message_type>([](auto) {}, q2);
     system.start();
   }
@@ -36,7 +36,7 @@ int main() {
         []() -> auto { return std::make_shared<message_type>(); }, q1);
     for (int i = 0; i < 4; i++)
       system.spawn_transformer<message_type>(
-          [&](auto job) -> auto { return job; }, q1, q2);
+          [](auto job) -> auto { return job; }, q1, q2);
     system.spawn_consumer<message_type>([](auto) {}, q2);
     system.start();
   }
