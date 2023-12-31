@@ -64,6 +64,7 @@ void node::set_transform_type(transform_type tt) {
 }
 
 void node::run() {
+  set_thread_name(name_);
   system.sleep();
   while (system.active() && active_) {
     // producer
