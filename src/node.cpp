@@ -7,12 +7,13 @@
 #include "node.h"
 #include "pipeline_system.h"
 #include "queue.h"
+#include "util/threadname.hpp"
 
 static int global_counter = 1;
 
-node::node(pipeline_system &sys) : node("", sys) {}
+node::node(pipeline_system& sys) : node("", sys) {}
 
-node::node(const std::string &name, pipeline_system &sys)
+node::node(const std::string& name, pipeline_system& sys)
     : system(sys), name_(name), runner(std::bind(&node::run, this)) {
   sys.link(this);
   sys.stats_.set_type(name, false);
@@ -45,6 +46,7 @@ void node::init() {
     }
     global_counter++;
   }
+  set_thread_name(name_);
 }
 
 void node::set_input_queue(std::shared_ptr<queue> ptr) {
@@ -110,9 +112,11 @@ void node::run() {
 void node::set_produce_function(produce_fun_t fun) {
   produce_fun = std::move(fun);
 }
+
 void node::set_transform_function(transform_fun_t fun) {
   transform_fun = std::move(fun);
 }
+
 void node::set_consume_function(consume_fun_t fun) {
   consume_fun = std::move(fun);
 }
