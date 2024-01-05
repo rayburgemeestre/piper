@@ -23,7 +23,7 @@ pipeline_system::~pipeline_system() {
 
 void pipeline_system::sleep() {
   std::unique_lock lock(mut);
-  cv.wait(lock, [=]() { return started; });
+  cv.wait(lock, [=, this]() { return started; });
 }
 
 bool pipeline_system::active() const {
