@@ -127,3 +127,8 @@ void queue::deactivate(std::unique_lock<std::mutex> &lock) {
   lock.unlock();
   cv.notify_all();
 }
+
+size_t queue::size() {
+  std::unique_lock lock(items_mut);
+  return items.size();
+}

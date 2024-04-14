@@ -46,4 +46,5 @@ public:
   std::shared_ptr<message_type> pop(int id);
   void check_terminate();
   void deactivate(std::unique_lock<std::mutex> &lock);
+  size_t size();
 };
